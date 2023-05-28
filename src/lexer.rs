@@ -3,13 +3,17 @@
 * TOKENIZE IT BABY
 */
 use std::iter::Peekable;
-// For our tokens, we dont' need to go into too much detail as to what we are storing...
-// We can define further in our Node Type exactly what we are parsing. For now
-// just being able to separate out string literals, number literals, open and closed
-// parens and brackets should be enough.
+/* Here we define the characters we will run into when parsing the input file. We create an enum
+which will allow us to store all the different possibilities in the same vector and we can match
+them and define the logic of what our program will do when we enter the parsing phase.
+If we run into an ascii character for instance, we would create a string and as long as the next char
+is also an ascii character, we push it to our string. When the following character is something different,
+we create a Token::String("value") and push that to our vector. This creates Tokens and allows the input
+to be parsed much more easily. Here we are using Lexical analysis to analyze a file and create tokens
+we can iterate over and parse. */
 #[derive(Debug, PartialEq, Clone)]
 pub enum Token {
-    String(String),
+    StringLiteral(String),
     Number(String),
     Operand(char),
     Carrot,
@@ -42,7 +46,7 @@ impl Token {
             Token::Minus => return String::from("Minus/Dash"),
             Token::Plus => return String::from("Plus"),
             Token::Equals => return String::from("Equals"),
-            Token::String(s) => return s.clone(),
+            Token::StringLiteral(s) => return s.clone(),
             Token::Number(s) => return s.clone(),
             Token::Operand(s) => return s.to_string(),
             Token::Quote => return String::from("Quote"),
@@ -85,15 +89,20 @@ impl Token {
 pub fn tokenizer(lines: String) -> Result<Vec<Token>, String> {
     let mut tokens: Vec<Token> = Vec::new();
 
-    // What we need to do here is iterate one character at a time, and if it is a simliar type of
-    // char (number literal, string literal, etc) we need to store it first in a string, then
-    // create out token enum and push it into our vector that we will return.
+    /*What we need to do here is iterate one character at a time, and if it is a simliar type of
+    char (number literal, string literal, etc) we need to store it first in a string, then
+    create out token enum and push it into our vector that we will return.
+    Rust has the type Peekable<T> which allows us to look ahead in the iterable
+    without indexing and risking an index out of range error */
     let mut line_number = 0;
     let binding = lines.clone();
     let mut words: Peekable<std::str::Chars> = binding.chars().peekable();
     while let Some(&next) = words.peek() {
         if next == '"' {
             tokens.push(Token::Quote)
+        } else if next.is_whitespace() {
+            // Skip whitespace characters
+            words.next();
         }
         match next {
             '\n' => line_number += 1,
@@ -107,6 +116,8 @@ pub fn tokenizer(lines: String) -> Result<Vec<Token>, String> {
             '%' => tokens.push(Token::Modulo),
             '^' => tokens.push(Token::Carrot),
             '+' => tokens.push(Token::Plus),
+            ',' => tokens.push(Token::Comma),
+            '.' => tokens.push(Token::Period),
             '-' => tokens.push(Token::Minus),
             '_' => tokens.push(Token::Underscore),
             '#' => tokens.push(Token::Hashtag),
@@ -122,21 +133,29 @@ pub fn tokenizer(lines: String) -> Result<Vec<Token>, String> {
                 while let Some(&next) = words.peek() {
                     if next.is_ascii_digit() {
                         number.push(words.next().unwrap());
-                    }
-                    tokens.push(Token::Number(number.clone()));
-                }
-            }
-            'a'..='z' | 'A'..='Z' => {
-                while let Some(&next) = words.peek() {
-                    let mut word: String = String::new();
-                    if next.is_ascii_alphabetic() {
-                        word.push(words.next().unwrap().to_ascii_lowercase());
                     } else {
                         break;
                     }
                 }
+                tokens.push(Token::Number(number));
             }
-            _ => continue,
+            'a'..='z' | 'A'..='Z' => {
+                let mut word: String = String::new();
+                while let Some(&next) = words.peek() {
+                    if next.is_ascii_alphabetic() {
+                        word.push(words.next().unwrap());
+                    } else {
+                        break;
+                    }
+                }
+                tokens.push(Token::StringLiteral(word))
+            }
+            _ => {
+                return Err(format!(
+                    "{} <- Unexpected character on line {}",
+                    next, line_number
+                ))
+            }
         }
     }
     println!("success!");
