@@ -1,6 +1,6 @@
 mod lexer;
+mod parser;
 use crate::lexer::tokenizer;
-use crate::lexer::Token;
 use std::env;
 use std::fs::read_to_string;
 
@@ -45,14 +45,20 @@ fn main() {
 
     match (input_file, output_filename) {
         (Some(file), Some(output)) => {
-            match read_input_file(file.clone()) {
-                Ok(tokens) => {
-                    for token in tokens.iter() {
-                        println!("debugging, we got to here! \n");
-                        println!("{}", token.to_string().clone());
+            match read_to_string(file.clone()) {
+                Ok(lines) => match tokenizer(lines) {
+                    Ok(_tokens) => (),
+                    Err(err) => println!("{}", err),
+                },
+                Err(err) => println!("{}", err),
+            }
+            match tokenizer(file.clone()) {
+                Ok(_tokens) => {
+                    for item in _tokens.iter() {
+                        std::fs::write("./output.txt", item.to_string()).unwrap();
                     }
                 }
-                Err(err) => println!("Error reading file: {}", err),
+                Err(err) => println!("{}", err),
             }
             println!("Input file: {}", file);
             println!("Output filename: {}", output);
@@ -60,14 +66,4 @@ fn main() {
         _ => println!("Invalid input. Usage: compiler -i input_file -o output_filename"),
     }
     println!("success?");
-}
-
-fn read_input_file(file: String) -> Result<Vec<Token>, String> {
-    match read_to_string(file) {
-        Ok(lines) => match tokenizer(lines) {
-            Ok(tokens) => return Ok(tokens),
-            Err(err) => Err(err.to_string()),
-        },
-        Err(err) => Err(err.to_string()),
-    }
 }
