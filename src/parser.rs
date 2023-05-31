@@ -1,19 +1,21 @@
+use crate::lexer::Span;
 use crate::lexer::Token;
 use crate::lexer::TokenType;
+use crate::lexer::TS;
 use std::iter::Peekable;
 
-pub struct Parser<R: Iterator<Item = Token>> {
-    reader: Peekable<R>, // Our source of tokens (output of our lexer)
+pub struct Parser<R: Iterator<Item = TS>> {
+    reader: Peekable<R>, // Our source of tokens
     token: Token,        // the current token being parsed
     span: Span,          // span represents the relative location in the source
                          // code that our current token resides. This is for error
                          // messages, warnings, diagnostics
 }
-pub struct AST {}
+
 // We will implement the following funcitons on our Parser object:
 // new: to create a new Parser object, and parse: to output the result
 // of parsing each following token
-impl<R: Iterator<Item = Token>> Parser<R> {
+impl<R: Iterator<Item = TS>> Parser<R> {
     pub fn new(mut it: R) -> Parser<R> {
         let first = it.next().unwrap();
         return Parser {
