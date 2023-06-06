@@ -1,3 +1,4 @@
+/* VERY beginning stages, very little work done yet as lexer is reworked */
 use crate::lexer::Span;
 use crate::lexer::Token;
 use crate::lexer::TokenType;

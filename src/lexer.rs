@@ -17,20 +17,21 @@ use std::str::Chars;
 * like this. So for now, we implement methods on our Lexer object to handle this,
 * outputting Tokens separately.
 */
+
 #[derive(Debug, Clone)]
 pub struct Lexer {
-    pub input: String,
+    pub input: i32,
     pub reader: Peekable<Chars<'static>>,
     pub curr_token: Token,
     pub position: u32,
 }
 impl Lexer {
-    pub fn peek_token(&self) -> char {
+    pub fn peek_token(&self) -> Option<char, String> {
         if self.input.len() <= self.position.try_into().unwrap() {
-            '\0'
+            Some('\0')
         } else {
             self.position += 1;
-            return *self.reader.peek().unwrap();
+            return *self.reader.peek();
         }
     }
     pub fn new(&self, file: String) -> Lexer {
@@ -45,234 +46,231 @@ impl Lexer {
     }
     pub fn parse_token(&self) -> Option<Token> {
         let token: Token = Token::new();
-        let ch = self.peek_token();
-            if ch == '"' {
-                if openquote {
-                    return Some(Token {
-                        kind: TokenType::Quote,
-                        value: "none".to_string(),
-                    });
-            } else if ch == '\'' {
+        let ch = self.peek_token().unwrap();
+        if ch == '"' {
+            return Some(Token {
+                kind: TokenType::Quote,
+                value: "none".to_string(),
+            });
+        } else if ch == '\'' {
+            return Some(Token {
+                kind: TokenType::SingleQuote,
+                value: "none".to_string(),
+            });
+        } else if ch.is_whitespace() {
+            // Skip whitespace characters
+            return None;
+        } else if ch == '\t' {
+            return None;
+        } else if ch == '\n' {
+            self.position += 1;
+            return None;
+        }
+        match ch {
+            '(' => {
                 return Some(Token {
-                    kind: TokenType::SingleQuote,
+                    kind: TokenType::OpenParen,
                     value: "none".to_string(),
                 })
-            } else if ch.is_whitespace() {
-                // Skip whitespace characters
-                return None;
-            } else if ch == '\t' {
-                return None;
-            } else if ch == '\n' {
-                self.position += 1;
-                return None;
             }
-            match ch {
-                '(' => {
-                    token = (Token {
-                        kind: TokenType::OpenParen,
-                        value: "none".to_string(),
-                    })
-                }
-                ')' => {
-                    token = (Token {
-                        kind: TokenType::ClosedParen,
-                        value: "none".to_string(),
-                    })
-                }
-                '{' => {
-                    token = (Token {
-                        kind: TokenType::OpenBracket,
-                        value: "none".to_string(),
-                    })
-                }
-                '}' => {
-                    token = (Token {
-                        kind: TokenType::ClosedBracket,
-                        value: "none".to_string(),
-                    })
-                }
-                '|' => {
-                    token = (Token {
-                        kind: TokenType::Pipe,
-                        value: "none".to_string(),
-                    })
-                }
-                '\\' => {
-                    token = (Token {
-                        kind: TokenType::BackSlash,
-                        value: "none".to_string(),
-                    })
-                }
-                '*' => {
-                    token = (Token {
-                        kind: TokenType::Asterisk,
-                        value: "none".to_string(),
-                    })
-                }
-                '!' => {
-                    token = (Token {
-                        kind: TokenType::Bang,
-                        value: "none".to_string(),
-                    })
-                }
-                '&' => {
-                    token = (Token {
-                        kind: TokenType::Ampersand,
-                        value: "none".to_string(),
-                    })
-                }
-                '%' => {
-                    token = (Token {
-                        kind: TokenType::Modulo,
-                        value: "none".to_string(),
-                    })
-                }
-                '^' => {
-                    token = (Token {
-                        kind: TokenType::Carrot,
-                        value: "none".to_string(),
-                    })
-                }
-                '+' => {
-                    token = (Token {
-                        kind: TokenType::Plus,
-                        value: "none".to_string(),
-                    })
-                }
-                ',' => {
-                    token = (Token {
-                        kind: TokenType::Comma,
-                        value: "none".to_string(),
-                    })
-                }
-                '.' => {
-                    return Some(Token {
-                        kind: TokenType::Period,
-                        value: "none".to_string(),
-                    })
-                }
-                '_' => {
-                    return Some(Token {
-                        kind: TokenType::Underscore,
-                        value: "none".to_string(),
-                    })
-                }
-                '-' => {
-                    return Some(Token {
-                        kind: TokenType::Minus,
-                        value: "none".to_string(),
-                    })
-                }
-                '#' => {
-                    return Some(Token {
-                        kind: TokenType::Hashtag,
-                        value: "none".to_string(),
-                    })
-                }
-                '=' => {
-                    return Some(Token {
-                        kind: TokenType::Equals,
-                        value: "none".to_string(),
-                    })
-                }
-                ':' => {
-                    return Some(Token {
-                        kind: TokenType::Colon,
-                        value: "none".to_string(),
-                    })
-                }
-                ';' => {
-                    return Some(Token {
-                        kind: TokenType::Semicolon,
-                        value: "none".to_string(),
-                    })
-                }
-                '<' => {
-                    return Some(Token {
-                        kind: TokenType::LeftCarrot,
-                        value: "none".to_string(),
-                    })
-                }
-                '>' => {
-                    return Some(Token {
-                        kind: TokenType::RightCarrot,
-                        value: "none".to_string(),
-                    })
-                }
-                '/' => {
-                    if *self.reader.peek().unwrap() == '/' {
-                        //inline comment
-                        while let Some(&next) = self.next() {
-                            if next == '\n' {
-                                break;
-                            } else {
-                                continue;
-                            }
+            ')' => {
+                return Some(Token {
+                    kind: TokenType::ClosedParen,
+                    value: "none".to_string(),
+                })
+            }
+            '{' => {
+                return Some(Token {
+                    kind: TokenType::OpenBracket,
+                    value: "none".to_string(),
+                })
+            }
+            '}' => {
+                return Some(Token {
+                    kind: TokenType::ClosedBracket,
+                    value: "none".to_string(),
+                })
+            }
+            '|' => {
+                return Some(Token {
+                    kind: TokenType::Pipe,
+                    value: "none".to_string(),
+                })
+            }
+            '\\' => {
+                return Some(Token {
+                    kind: TokenType::BackSlash,
+                    value: "none".to_string(),
+                })
+            }
+            '*' => {
+                return Some(Token {
+                    kind: TokenType::Asterisk,
+                    value: "none".to_string(),
+                })
+            }
+            '!' => {
+                return Some(Token {
+                    kind: TokenType::Bang,
+                    value: "none".to_string(),
+                })
+            }
+            '&' => {
+                return Some(Token {
+                    kind: TokenType::Ampersand,
+                    value: "none".to_string(),
+                })
+            }
+            '%' => {
+                return Some(Token {
+                    kind: TokenType::Modulo,
+                    value: "none".to_string(),
+                })
+            }
+            '^' => {
+                return Some(Token {
+                    kind: TokenType::Carrot,
+                    value: "none".to_string(),
+                })
+            }
+            '+' => {
+                return Some(Token {
+                    kind: TokenType::Plus,
+                    value: "none".to_string(),
+                })
+            }
+            ',' => {
+                return Some(Token {
+                    kind: TokenType::Comma,
+                    value: "none".to_string(),
+                })
+            }
+            '.' => {
+                return Some(Token {
+                    kind: TokenType::Period,
+                    value: "none".to_string(),
+                })
+            }
+            '_' => {
+                return Some(Token {
+                    kind: TokenType::Underscore,
+                    value: "none".to_string(),
+                })
+            }
+            '-' => {
+                return Some(Token {
+                    kind: TokenType::Minus,
+                    value: "none".to_string(),
+                })
+            }
+            '#' => {
+                return Some(Token {
+                    kind: TokenType::Hashtag,
+                    value: "none".to_string(),
+                })
+            }
+            '=' => {
+                return Some(Token {
+                    kind: TokenType::Equals,
+                    value: "none".to_string(),
+                })
+            }
+            ':' => {
+                return Some(Token {
+                    kind: TokenType::Colon,
+                    value: "none".to_string(),
+                })
+            }
+            ';' => {
+                return Some(Token {
+                    kind: TokenType::Semicolon,
+                    value: "none".to_string(),
+                })
+            }
+            '<' => {
+                return Some(Token {
+                    kind: TokenType::LeftCarrot,
+                    value: "none".to_string(),
+                })
+            }
+            '>' => {
+                return Some(Token {
+                    kind: TokenType::RightCarrot,
+                    value: "none".to_string(),
+                })
+            }
+            '/' => {
+                if *self.reader.peek().unwrap() == '/' {
+                    //inline comment
+                    while let Some(&next) = self.next() {
+                        if next == '\n' {
+                            break;
+                        } else {
+                            continue;
                         }
-                    } else if *self.reader.peek().unwrap() == '*' {
-                        // block comment, ignore all words/chars until we see these again
-                        while let Some(&next) = self.next() {
-                            if next == '*' && *self.peek_token() == '/' {
-                                words.next();
-                                break;
-                            }
-                        }
-                    } else {
-                        tokens.push(Token {
-                            kind: TokenType::ForwardSlash,
-                            value: "none".to_string(),
-                        });
                     }
+                } else if *self.reader.peek().unwrap() == '*' {
+                    // block comment, ignore all words/chars until we see these again
+                    while let Some(&next) = self.next() {
+                        if next == '*' && *self.peek_token() == '/' {
+                            self.peek_token();
+                            break;
+                        }
+                    }
+                } else {
+                    return Some(Token {
+                        kind: TokenType::ForwardSlash,
+                        value: "none".to_string(),
+                    });
                 }
-                '?' | '@' | '$' | '~' => tokens.push(Token {
+            }
+            '?' | '@' | '$' | '~' => {
+                return Some(Token {
                     kind: TokenType::Operand,
                     value: String::from(ch),
-                }),
-                '0'..='9' => {
-                    let mut number = String::new();
-                    number.push(ch);
-                    while let Some(&ch) = words.peek() {
-                        if ch.is_ascii_digit() {
-                            number.push(ch);
-                            words.next();
-                        } else {
-                            break;
-                        }
-                    }
-                    tokens.push(Token {
-                        kind: TokenType::NumberLiteral,
-                        value: number.clone(),
-                    });
-                }
-                'a'..='z' | 'A'..='Z' => {
-                    let mut word: String = String::new();
-                    word.push(ch);
-                    while let Some(&ch) = words.peek() {
-                        if ch.is_ascii_alphabetic() {
-                            word.push(ch);
-                            words.next();
-                        } else {
-                            break;
-                        }
-                    }
-                    tokens.push(Token {
-                        kind: TokenType::StringLiteral,
-                        value: word.clone(),
-                    });
-                }
-                _ => {
-                    error_lines.insert(String::from(ch), line_number);
-                }
+                })
             }
+            '0'..='9' => {
+                let mut number = String::new();
+                number.push(ch);
+                while let Some(&ch) = self.parse_token() {
+                    if ch.is_ascii_digit() {
+                        number.push(ch);
+                    } else {
+                        break;
+                    }
+                }
+                return Some(Token {
+                    kind: TokenType::NumberLiteral,
+                    value: number.clone(),
+                });
+            }
+            'a'..='z' | 'A'..='Z' => {
+                let mut word: String = String::new();
+                word.push(ch);
+                while let Some(&ch) = self.parse_token() {
+                    if ch.is_ascii_alphabetic() {
+                        word.push(ch);
+                    } else {
+                        break;
+                    }
+                }
+                return Some(Token {
+                    kind: TokenType::StringLiteral,
+                    value: word.clone(),
+                });
+            }
+            _ => return None,
         }
-        return Some(token);
     }
+}
 
 #[derive(Debug, PartialEq, Clone, Eq)]
 pub struct Token {
     pub kind: TokenType,
     pub value: String,
 }
+
 #[derive(Debug, PartialEq, Clone, Eq)]
 pub struct TS {
     pub token: Token,
@@ -390,15 +388,13 @@ impl<T: Spanner> Spanner for Vec<T> {
     fn span(&self) -> Span {
         if self.is_empty() {
             return Span { beg: 0, end: 0 };
-        } else {
-            return Span {
-                beg: self.first().unwrap().span().beg,
-                end: self.last().unwrap().span().end,
-            };
         }
+        return Span {
+            beg: self.first().unwrap().span().beg,
+            end: self.last().unwrap().span().end,
+        };
     }
 }
-
 // This will take in our input string and return a result type, meaning either Ok(Vec<Token>) or
 // Err(String) in this case..
 /*
