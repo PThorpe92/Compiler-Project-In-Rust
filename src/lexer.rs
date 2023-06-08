@@ -92,10 +92,17 @@ impl Lexer {
                 })
             }
             '|' => {
-                return Some(Token {
-                    kind: TokenType::Pipe,
-                    value: "none".to_string(),
-                })
+                if self.peek_token() == "|" {
+                    return Some(Token {
+                        kind: TokenType::Or,
+                        value: "Or".to_string(),
+                    });
+                } else {
+                    return Some(Token {
+                        kind: TokenType::Or,
+                        value: "Logical Or".to_string(),
+                    });
+                }
             }
             '\\' => {
                 return Some(Token {
@@ -105,7 +112,7 @@ impl Lexer {
             }
             '*' => {
                 return Some(Token {
-                    kind: TokenType::Asterisk,
+                    kind: TokenType::Star,
                     value: "none".to_string(),
                 })
             }
@@ -116,10 +123,17 @@ impl Lexer {
                 })
             }
             '&' => {
-                return Some(Token {
-                    kind: TokenType::Ampersand,
-                    value: "none".to_string(),
-                })
+                if self.peek_token() == "&" {
+                    return Some(Token {
+                        kind: TokenType::AndAnd,
+                        value: "logical and".to_string(),
+                    });
+                } else {
+                    return Some(Token {
+                        kind: TokenType::And,
+                        value: "".to_string(),
+                    });
+                }
             }
             '%' => {
                 return Some(Token {
@@ -129,7 +143,7 @@ impl Lexer {
             }
             '^' => {
                 return Some(Token {
-                    kind: TokenType::Carrot,
+                    kind: TokenType::Caret,
                     value: "none".to_string(),
                 })
             }
@@ -288,21 +302,21 @@ pub enum TokenType {
     StringLiteral,
     NumberLiteral,
     Operand,
-    Carrot,
+    Caret,
     Period,
     Colon,
     Semicolon,
     Underscore,
     Hashtag,
-    Asterisk,
+    Star,
     Modulo,
     BackSlash,
-    ForwardSlash,
+    FwdSlash,
     Bang,
     Comma,
-    Pipe,
-    LeftCarrot,
-    RightCarrot,
+    Or,
+    LeftCaret,
+    RightCaret,
     ClosedParen,
     OpenParen,
     OpenBracket,
@@ -312,7 +326,7 @@ pub enum TokenType {
     ClosedBracket,
     Quote,
     SingleQuote,
-    Ampersand,
+    And,
     EOF,
 }
 impl Token {
@@ -349,22 +363,22 @@ impl TokenType {
             TokenType::Operand => return String::from("Operand/Symbol"),
             TokenType::Quote => return String::from("DoubleQuote"),
             TokenType::SingleQuote => return String::from("Single Quote"),
-            TokenType::Asterisk => return String::from("Star/Asterisk"),
+            TokenType::Star => return String::from("Star/Asterisk"),
             TokenType::Modulo => return String::from("Modulo"),
             TokenType::Bang => return String::from("Bang"),
             TokenType::BackSlash => return String::from("Backslash"),
-            TokenType::ForwardSlash => return String::from("Forwardslash"),
+            TokenType::FwdSlash => return String::from("Forwardslash"),
             TokenType::Semicolon => return String::from("Semi-Colon"),
             TokenType::Colon => return String::from("Colon"),
             TokenType::Period => return String::from("Period"),
             TokenType::Comma => return String::from("Comma"),
-            TokenType::Pipe => return String::from("Pipe"),
+            TokenType::Or => return String::from("Pipe"),
             TokenType::Underscore => return String::from("Underscore"),
-            TokenType::Carrot => return String::from("Carrot"),
+            TokenType::Caret => return String::from("Caret"),
             TokenType::Hashtag => return String::from("Hashtag"),
-            TokenType::Ampersand => return String::from("Ampersand"),
-            TokenType::LeftCarrot => return String::from("Left Carrot/Less than"),
-            TokenType::RightCarrot => return String::from("Right Carrot/Greater than"),
+            TokenType::And => return String::from("Ampersand"),
+            TokenType::LeftCaret => return String::from("Left Caret/Less than"),
+            TokenType::RightCaret => return String::from("Right Caret/Greater than"),
             TokenType::ClosedParen => return String::from("Closed Parenthesis"),
             TokenType::OpenParen => return String::from("Open Parenthesis"),
             TokenType::OpenBracket => return String::from("Open Bracket"),
